@@ -1437,7 +1437,7 @@ class MikrotikCoordinator(DataUpdateCoordinator[None]):
         elif 0 < self.major_fw_version >= 7:
             self.ds["health7"] = parse_api(
                 data=self.ds["health7"],
-                source=self.api.query("/system/health"),
+                source=self.api.query("/system/identity"),
                 key="name",
                 vals=[
                     {"name": "value", "default": "unknown"},
