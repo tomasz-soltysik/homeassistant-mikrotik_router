@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_PASSWORD,
     CONF_SSL,
+    CONF_VERIFY_SSL,
     CONF_ZONE,
     STATE_HOME,
 )
@@ -59,6 +60,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
     DEFAULT_SENSOR_NETWATCH_TRACKER,
     CONF_SENSOR_NETWATCH_TRACKER,
 )
@@ -84,7 +86,7 @@ def configured_instances(hass):
 class MikrotikControllerConfigFlow(ConfigFlow, domain=DOMAIN):
     """MikrotikControllerConfigFlow class"""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
@@ -115,6 +117,7 @@ class MikrotikControllerConfigFlow(ConfigFlow, domain=DOMAIN):
                 password=user_input[CONF_PASSWORD],
                 port=user_input[CONF_PORT],
                 use_ssl=user_input[CONF_SSL],
+                ssl_verify=user_input[CONF_VERIFY_SSL],
             )
             if not api.connect():
                 errors[CONF_HOST] = api.error
@@ -135,6 +138,7 @@ class MikrotikControllerConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: DEFAULT_USERNAME,
                 CONF_PORT: DEFAULT_PORT,
                 CONF_SSL: DEFAULT_SSL,
+                CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
             },
             errors=errors,
         )
@@ -154,6 +158,9 @@ class MikrotikControllerConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
                     vol.Optional(CONF_PORT, default=user_input[CONF_PORT]): int,
                     vol.Optional(CONF_SSL, default=user_input[CONF_SSL]): bool,
+                    vol.Optional(
+                        CONF_VERIFY_SSL, default=user_input[CONF_VERIFY_SSL]
+                    ): bool,
                 }
             ),
             errors=errors,
@@ -168,7 +175,7 @@ class MikrotikControllerOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize options flow."""
-        self.config_entry = config_entry
+        self._config_entry = config_entry
         self.options = dict(config_entry.options)
 
     async def async_step_init(self, user_input=None):
@@ -188,25 +195,25 @@ class MikrotikControllerOptionsFlowHandler(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_SCAN_INTERVAL,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                         ),
                     ): int,
                     vol.Optional(
                         CONF_TRACK_IFACE_CLIENTS,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_TRACK_IFACE_CLIENTS, DEFAULT_TRACK_IFACE_CLIENTS
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_TRACK_HOSTS_TIMEOUT,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_TRACK_HOSTS_TIMEOUT, DEFAULT_TRACK_HOST_TIMEOUT
                         ),
                     ): int,
                     vol.Optional(
                         CONF_ZONE,
-                        default=self.config_entry.options.get(CONF_ZONE, STATE_HOME),
+                        default=self._config_entry.options.get(CONF_ZONE, STATE_HOME),
                     ): str,
                 }
             ),
@@ -224,86 +231,86 @@ class MikrotikControllerOptionsFlowHandler(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_SENSOR_PORT_TRACKER,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SENSOR_PORT_TRACKER, DEFAULT_SENSOR_PORT_TRACKER
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_SENSOR_PORT_TRAFFIC,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SENSOR_PORT_TRAFFIC, DEFAULT_SENSOR_PORT_TRAFFIC
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_TRACK_HOSTS,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_TRACK_HOSTS, DEFAULT_TRACK_HOSTS
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_SENSOR_CLIENT_TRAFFIC,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SENSOR_CLIENT_TRAFFIC, DEFAULT_SENSOR_CLIENT_TRAFFIC
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_SENSOR_CLIENT_CAPTIVE,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SENSOR_CLIENT_CAPTIVE, DEFAULT_SENSOR_CLIENT_CAPTIVE
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_SENSOR_SIMPLE_QUEUES,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SENSOR_SIMPLE_QUEUES, DEFAULT_SENSOR_SIMPLE_QUEUES
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_SENSOR_NAT,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SENSOR_NAT, DEFAULT_SENSOR_NAT
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_SENSOR_MANGLE,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SENSOR_MANGLE, DEFAULT_SENSOR_MANGLE
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_SENSOR_FILTER,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SENSOR_FILTER, DEFAULT_SENSOR_FILTER
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_SENSOR_KIDCONTROL,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SENSOR_KIDCONTROL, DEFAULT_SENSOR_KIDCONTROL
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_SENSOR_NETWATCH_TRACKER,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SENSOR_NETWATCH_TRACKER,
                             DEFAULT_SENSOR_NETWATCH_TRACKER,
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_SENSOR_PPP,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SENSOR_PPP, DEFAULT_SENSOR_PPP
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_SENSOR_SCRIPTS,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SENSOR_SCRIPTS, DEFAULT_SENSOR_SCRIPTS
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_SENSOR_ENVIRONMENT,
-                        default=self.config_entry.options.get(
+                        default=self._config_entry.options.get(
                             CONF_SENSOR_ENVIRONMENT, DEFAULT_SENSOR_ENVIRONMENT
                         ),
                     ): bool,
